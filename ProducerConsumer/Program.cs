@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProducerConsumer
@@ -8,17 +9,18 @@ namespace ProducerConsumer
     {
         public class OneProducerTwoConsumer
         {
-            private readonly BlockingCollection<int> randomNumbersForDivisibleByFive = new BlockingCollection<int>(10);
-            private readonly BlockingCollection<int> randomNumbersForDivisibleByThree = new BlockingCollection<int>(10);
+            private readonly BlockingCollection<int> randomNumbersForDivisibleByFive = new BlockingCollection<int>(1);
+            private readonly BlockingCollection<int> randomNumbersForDivisibleByThree = new BlockingCollection<int>(1);
 
             private void Producer()
             {
-                int numberOfNumbers = 50;
+                int numberOfNumbers = 5;
                 Random random = new Random();
 
                 for (int i = 0; i < numberOfNumbers; i++)
                 {
                     int randomNumber = random.Next(1000);
+                    Thread.Sleep(1000);
 
                     randomNumbersForDivisibleByFive.Add(randomNumber);
                     randomNumbersForDivisibleByThree.Add(randomNumber);
