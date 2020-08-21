@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,7 +31,7 @@ namespace ProducerConsumer
             {
                 foreach (int randomNumber in randomNumbersForDivisibleByFive.GetConsumingEnumerable())
                 {
-                    if(randomNumber % 5 == 0)
+                    if (randomNumber % 5 == 0)
                     {
                         Console.WriteLine($"{randomNumber} is divisible by 5");
                     }
@@ -54,7 +55,7 @@ namespace ProducerConsumer
                     }
                 }
             }
-            public void RunTasks()
+            public void RunTasks1()
             {
                 var producingTask = Task.Run(() => Producer());
 
@@ -65,11 +66,71 @@ namespace ProducerConsumer
                 Task.WaitAll(producingTask, divisibleByFiveTask, divisibleByThreeTask);
             }
         }
+
+        public class PipeLinePattern
+        {
+            private readonly BlockingCollection<string> CookPizza = new BlockingCollection<string>(4);
+            private readonly BlockingCollection<string> PizzaOnCounter = new BlockingCollection<string>(3);
+
+            private void TakePizzaOrder()
+            {
+                List<string> ovenFood = new List<string>()
+                {
+                    "Margherita Pizza", "Beef Pepperoni Pizza", "Chicken Pepperoni Pizza", "Pineappple Pizza",
+                    "Mushroom Pizza", "Greek Pizza", "Cheese Pizza", "Ham Pizza", "Four Cheese Pizza", "Lemon Pizza", "Bacon Pizza",
+                };
+
+                Random randomOrders = new Random();
+                Random pizza = new Random();
+
+                int NumberOfOrders = randomOrders.Next(3, 21);
+                for (int p = 0; p < NumberOfOrders; p++)
+                {
+                    int pizzaNumber = pizza.Next(ovenFood.Count);
+                    string pizzaName = ovenFood[pizzaNumber];
+
+                    CookPizza.Add(pizzaName);
+                }
+            }
+
+            private void PutPizzaInOven()
+            {
+                foreach (string pizza in CookPizza.GetConsumingEnumerable())
+                {
+                    Thread.Sleep(300);
+                    Console.WriteLine($"A {pizza} Is Cooked!");
+                    PizzaOnCounter.Add(pizza);
+                }
+            }
+
+            private void PutPizzaOnTable()
+            {
+                foreach (string pizza in PizzaOnCounter.GetConsumingEnumerable())
+                {
+                    Thread.Sleep(1000);
+                    Console.WriteLine($"Enjoy your {pizza}!");
+                }
+            }
+
+            public void RunTasks2()
+            {
+                var takePizzaOrder = Task.Run(() => TakePizzaOrder());
+                var putPizzaInOven = Task.Run(() => PutPizzaInOven());
+                var putPizzaOnTable = Task.Run(() => PutPizzaOnTable());
+
+                Task.WaitAll(takePizzaOrder, putPizzaInOven, putPizzaOnTable);
+            }
+        }
+
         public static void Main(string[] args)
         {
-            OneProducerTwoConsumer oneProducerTwoConsumer = new OneProducerTwoConsumer();
+            /*OneProducerTwoConsumer oneProducerTwoConsumer = new OneProducerTwoConsumer();
             Console.WriteLine();
-            oneProducerTwoConsumer.RunTasks();
+            oneProducerTwoConsumer.RunTasks1();
+            */
+            PipeLinePattern pipeLinePattern = new PipeLinePattern();
+            Console.WriteLine("What would you like to order?");
+            pipeLinePattern.RunTasks2();
         }
     }
 }
